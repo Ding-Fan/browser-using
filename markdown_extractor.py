@@ -1,6 +1,11 @@
 import datetime
 import json
 import re # Import the regular expression module
+import os # Import the os module
+
+# Define output directories
+RESULT_DIR = "output/result"
+LOG_DIR = "output/log"
 
 # Simulate ActionResult and AgentHistoryList for testing
 class ActionResult:
@@ -29,8 +34,12 @@ def extract_and_save_markdown(agent_result, filename_prefix="志望動機"):
     # Create a timestamp once for both files
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     
+    # Ensure output directories exist
+    os.makedirs(RESULT_DIR, exist_ok=True)
+    os.makedirs(LOG_DIR, exist_ok=True)
+
     # --- Step 1: Save a raw log of the entire agent result ---
-    log_filename = f"{filename_prefix}_log_{timestamp}.json"
+    log_filename = os.path.join(LOG_DIR, f"{filename_prefix}_log_{timestamp}.json")
     try:
         # A robust way to serialize any object (including custom classes) to JSON
         log_content = json.dumps(
@@ -125,7 +134,7 @@ def extract_and_save_markdown(agent_result, filename_prefix="志望動機"):
     # If not wrapped, `final_output` remains unchanged (it's already the raw markdown).
 
     # Save the cleaned markdown content
-    md_filename = f"{filename_prefix}_{timestamp}.md"
+    md_filename = os.path.join(RESULT_DIR, f"{filename_prefix}_{timestamp}.md")
     try:
         with open(md_filename, "w", encoding="utf-8") as f:
             f.write(final_output)
