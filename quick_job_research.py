@@ -6,24 +6,15 @@ import asyncio
 # Read GOOGLE_API_KEY into env
 load_dotenv()
 
-async def targeted_job_search():
+async def search_single_platform(platform_name, platform_url, job_role, location, llm):
     """
-    Focused job search with keyword extraction - perfect for getting started
+    Search a single job platform
     """
-    llm = ChatGoogleGenerativeAI(model='gemini-2.0-flash-exp')
-    
-    # 🎯 CUSTOMIZE YOUR SEARCH HERE
-    JOB_ROLE = "Data Scientist"  # ← Change this to your target role
-    LOCATION = "Remote"  # ← Change location or leave as "Remote"
-    
     task = f"""
-    I want to research {JOB_ROLE} job opportunities. Please do the following:
+    Go to {platform_url} and search for "{job_role}" jobs in "{location}".
     
-    1. **Go to LinkedIn Jobs** (https://www.linkedin.com/jobs/)
-    2. **Search for:** "{JOB_ROLE}" jobs in "{LOCATION}"
-    3. **Analyze the first 10 job postings** you find
+    Extract information from the first 5-8 job postings you find:
     
-    For each job, extract:
     🏢 **BASIC INFO:**
     - Job Title
     - Company Name
@@ -31,61 +22,148 @@ async def targeted_job_search():
     - Experience Level
     - Salary (if shown)
     
-    💻 **TECHNICAL SKILLS MENTIONED:**
+    💻 **TECHNICAL SKILLS:**
     - Programming Languages
     - Frameworks/Tools
     - Technologies
-    - Certifications requested
+    - Certifications
     
     📋 **REQUIREMENTS:**
     - Years of experience
     - Education requirements
+    - Language requirements (for Japanese sites)
     - Key responsibilities
     
-    After analyzing all jobs, provide:
-    
-    📊 **SUMMARY & KEYWORDS:**
-    
-    **Most Mentioned Skills** (with count):
-    - Programming Languages: [list with frequency]
-    - Tools/Frameworks: [list with frequency] 
-    - Cloud Platforms: [list with frequency]
-    - Soft Skills: [list with frequency]
-    
-    **Keyword Pairs for Resume/Applications:**
-    - [skill1] + [skill2]
-    - [tool] + [methodology]
-    - [technology] + [industry term]
-    
-    **Market Insights:**
-    - Average experience required
-    - Salary ranges found
-    - Remote work percentage
-    - Top hiring companies
-    
-    **Action Items:**
-    - Top 3 skills to learn/improve
-    - Best platforms to apply on
-    - Profile optimization tips
-    
-    Make this actionable and specific for someone looking for {JOB_ROLE} roles!
+    Format each job clearly and extract all technical keywords mentioned.
     """
     
-    print(f"🔍 Searching for {JOB_ROLE} positions...")
-    print(f"📍 Location: {LOCATION}")
-    print("🚀 Starting automated job market research...")
-    print("-" * 60)
-    
+    print(f"🔍 Searching {platform_name}...")
     agent = Agent(task=task, llm=llm)
     result = await agent.run()
+    return result
+
+async def targeted_job_search():
+    """
+    Multi-platform job search focusing on Japanese job market
+    """
+    llm = ChatGoogleGenerativeAI(model='gemini-2.0-flash-exp')
+    
+    # 🎯 CUSTOMIZE YOUR SEARCH HERE
+    JOB_ROLE = "Web Developer"  # ← Change this to your target role
+    LOCATION = "Tokyo"  # ← Change location or leave as "Remote"
+    
+    # 🇯🇵 JAPANESE JOB PLATFORMS
+    japanese_platforms = [
+        ("Rikunabi Next", "https://next.rikunabi.com/"),
+        ("Doda", "https://doda.jp/"),
+        ("Green (IT Focus)", "https://www.green-japan.com/"),
+        ("Wantedly", "https://www.wantedly.com/"),
+        ("Bizreach", "https://www.bizreach.jp/"),
+    ]
+    
+    # 🌍 INTERNATIONAL PLATFORMS
+    international_platforms = [
+        ("LinkedIn Jobs", "https://www.linkedin.com/jobs/"),
+        ("Indeed Japan", "https://jp.indeed.com/"),
+        ("CareerCross", "https://www.careercross.com/"),
+    ]
+    
+    # Combine platforms - you can comment out sections you don't want
+    all_platforms = japanese_platforms + international_platforms
+    
+    
+    print(f"🔍 Searching for {JOB_ROLE} positions in Japan...")
+    print(f"📍 Location: {LOCATION}")
+    print("🚀 Starting multi-platform job market research...")
+    print("-" * 60)
+    
+    all_results = {}
+    
+    # Search each platform
+    for platform_name, platform_url in all_platforms[:4]:  # Limit to first 4 to avoid rate limits
+        try:
+            result = await search_single_platform(platform_name, platform_url, JOB_ROLE, LOCATION, llm)
+            all_results[platform_name] = result
+            print(f"✅ {platform_name} search completed")
+            await asyncio.sleep(2)  # Small delay between searches
+        except Exception as e:
+            print(f"❌ Error searching {platform_name}: {str(e)}")
+            all_results[platform_name] = f"Error: {str(e)}"
+    
+    # Comprehensive analysis of all results
+    combined_results = ""
+    for platform, results in all_results.items():
+        combined_results += f"\n\n=== {platform.upper()} RESULTS ===\n"
+        combined_results += str(results)
+    
+    analysis_task = f"""
+    Analyze job search results for "{JOB_ROLE}" positions in Japan from multiple platforms:
+    
+    {combined_results}
+    
+    Provide comprehensive analysis:
+    
+    📊 **JAPAN JOB MARKET OVERVIEW:**
+    - Total jobs found across platforms
+    - Salary ranges (in JPY if available)
+    - Remote vs On-site opportunities
+    - Experience levels in demand
+    - Language requirements (Japanese level needed)
+    
+    🔥 **TOP SKILLS & TECHNOLOGIES:**
+    (Count frequency across all platforms)
+    - Programming Languages: [with frequency count]
+    - Frameworks/Libraries: [with frequency count]
+    - Cloud Platforms: [with frequency count]
+    - Tools & Software: [with frequency count]
+    - Soft Skills: [with frequency count]
+    
+    🏢 **COMPANY INSIGHTS:**
+    - Types of companies hiring (startups vs enterprises)
+    - Japanese vs international companies
+    - Industries represented
+    - Company sizes
+    
+    🎯 **KEYWORD PAIRS FOR APPLICATIONS:**
+    (Most effective combinations for Japanese job market)
+    - Technical combinations: (e.g., "React + TypeScript", "AWS + Docker")
+    - Skill pairs: (e.g., "Leadership + Communication", "API + Microservices")
+    - Japan-specific terms: (e.g., "Business level Japanese", "Global team")
+    
+    🇯🇵 **JAPAN-SPECIFIC INSIGHTS:**
+    - Japanese language requirements
+    - Work culture expectations
+    - Visa sponsorship availability
+    - Best platforms for foreigners
+    - Salary comparison with global standards
+    
+    💡 **ACTIONABLE INSIGHTS:**
+    - Most in-demand skills to learn
+    - Japanese language level needed
+    - Best platforms to focus on
+    - Profile optimization for Japanese market
+    - Networking opportunities
+    
+    🚀 **NEXT STEPS FOR JAPAN JOB MARKET:**
+    - Skills to prioritize learning
+    - Language study recommendations
+    - Cultural preparation tips
+    - Application strategy suggestions
+    
+    Make this practical and actionable for someone targeting the Japanese job market!
+    """
+    
+    print("📊 Analyzing Japan job market results...")
+    analysis_agent = Agent(task=analysis_task, llm=llm)
+    final_analysis = await analysis_agent.run()
     
     print("\n" + "="*80)
-    print("🎯 JOB MARKET ANALYSIS RESULTS")
+    print("🇯🇵 JAPAN JOB MARKET ANALYSIS RESULTS")
     print("="*80)
-    print(result)
+    print(final_analysis)
     print("="*80)
     
-    return result
+    return final_analysis
 
 if __name__ == "__main__":
     asyncio.run(targeted_job_search())
