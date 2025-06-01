@@ -6,6 +6,8 @@ This project contains Python scripts to automate job searching and analysis usin
 
 1. **Install Dependencies:**
    ```bash
+   pnpm i
+
    pip install browser-use langchain-google-genai python-dotenv
    ```
 

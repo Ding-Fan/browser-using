@@ -25,7 +25,8 @@ import asyncio
 
 async def main():
     # url = "https://baristagame.com/277de22fe896491097a20a136376882e"
-    url = "https://autoro.io/"
+    # url = "https://autoro.io/"
+    url = "https://everforth.co.jp/"
     agent = Agent(
         task=(
             f"I'm a student. I'm writing my resume in Japanese. "
