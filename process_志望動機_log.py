@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Script to process the browser automation log and extract the final 志望動機 content.
 """

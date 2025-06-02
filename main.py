@@ -12,7 +12,7 @@ load_dotenv()
 
 # LLM Configuration - Change these two lines to switch models
 PROVIDER = "deepseek"  # Options: "google", "deepseek"
-MODEL = "chat"         # For google: "2.5-flash", "2.0-flash-exp", "2.0-flash", "1.5-pro", "1.5-flash", "1.5"
+MODEL = "reasoner"         # For google: "2.5-flash", "2.0-flash-exp", "2.0-flash", "1.5-pro", "1.5-flash", "1.5"
                        # For deepseek: "chat"
 
 def get_llm(provider: str, model: str):
@@ -43,7 +43,7 @@ def get_llm(provider: str, model: str):
         # DeepSeek models configuration
         deepseek_models = {
             "chat": "deepseek-chat",
-            "coder": "deepseek-coder",
+            "reasoner": "deepseek-reasoner",
         }
         
         if model not in deepseek_models:
@@ -129,10 +129,24 @@ async def main():
     # Format URLs for the task
     if len(urls) == 1:
         urls_text = urls[0]
-        browse_instruction = f"Browse this URL {urls_text}, get the information of that company, "
+        browse_instruction = f"Browse this URL: {urls_text}\n\nResearch the company thoroughly by exploring:"
     else:
         urls_text = "\n".join([f"- {url}" for url in urls])
-        browse_instruction = f"Browse these URLs for {company_name}:\n{urls_text}\n\n for each of the URL: pay attention to the company culture, values, and mission etc. also look for their products, services, and any unique aspects, and randomly browse some pages to get a good understanding and comprehensive information of the company."
+        browse_instruction = f"Browse these URLs for {company_name}:\n{urls_text}\n\nResearch the company thoroughly by exploring:"
+    
+    browse_instruction += (
+        "\n• Company culture, values, and mission"
+        "\n• Products, services, and unique features"
+        "\n• Recent news, achievements, or initiatives"
+        "\n• Team, leadership, and company size"
+        "\n\n**BROWSING LIMITS (to save tokens):**"
+        "\n• Maximum 8 pages total (including provided URLs)"
+        "\n• Ensure all provided URLs are visited"
+        "\n• Browse two additional new pages to get a broader view"
+        "\n• Spend no more than 60 seconds per page"
+        "\n• Focus only on key information, skip detailed content"
+        "\n• Only one long articles or blog post is allowed to read in detail"
+    )
 
     agent = Agent(
         task=(
@@ -143,6 +157,7 @@ async def main():
             f"Based on both my background and the company information, "
             f"help me write 志望動機 in Japanese for it. "
             f"You should create short, medium, and long versions.\n"
+            f"At the end, provide a Analyse section of the company.\n"
             f"Output the result in markdown format, with clear section headers for each version."
         ),
         llm=llm,
