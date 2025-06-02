@@ -3,26 +3,69 @@ from browser_use import Agent
 from dotenv import load_dotenv
 from markdown_extractor import extract_and_save_markdown
 import json
+import os
+from langchain_deepseek import ChatDeepSeek
+from pydantic import SecretStr
 
-# Read GOOGLE_API_KEY into env
+# Read environment variables
 load_dotenv()
 
-models =  {
-    "gemini": {
-        "2.5-flash": "gemini-2.5-flash",
-        "2.0-flash-exp": "gemini-2.0-flash-exp",
-        "2.0-flash": "gemini-2.0-flash",
-        "2.0-flash-lite": "gemini-2.0-flash-lite",
-        "1.5-pro": "gemini-1.5-pro",
-        "1.5-flash": "gemini-1.5-flash",
-        "1.5": "gemini-1.5",
-    }
-}
+# LLM Configuration - Change these two lines to switch models
+PROVIDER = "deepseek"  # Options: "google", "deepseek"
+MODEL = "chat"         # For google: "2.5-flash", "2.0-flash-exp", "2.0-flash", "1.5-pro", "1.5-flash", "1.5"
+                       # For deepseek: "chat"
 
-# Initialize the model
-llm = ChatGoogleGenerativeAI(model=models["gemini"]["2.0-flash"])
-# not working
-# llm = ChatGoogleGenerativeAI(model=models["gemini"]["2.0-flash-lite"])
+def get_llm(provider: str, model: str):
+    """Initialize and return the specified LLM model"""
+    
+    if provider == "google":
+        # Google Gemini models configuration
+        google_models = {
+            "2.5-flash": "gemini-2.5-flash",
+            "2.0-flash-exp": "gemini-2.0-flash-exp", 
+            "2.0-flash": "gemini-2.0-flash",
+            "2.0-flash-lite": "gemini-2.0-flash-lite",
+            "1.5-pro": "gemini-1.5-pro",
+            "1.5-flash": "gemini-1.5-flash",
+            "1.5": "gemini-1.5",
+        }
+        
+        if model not in google_models:
+            raise ValueError(f"Unsupported Google model: {model}. Available options: {list(google_models.keys())}")
+        
+        api_key = os.getenv("GOOGLE_API_KEY")
+        if not api_key:
+            raise ValueError("GOOGLE_API_KEY not found in environment variables")
+        
+        return ChatGoogleGenerativeAI(model=google_models[model])
+    
+    elif provider == "deepseek":
+        # DeepSeek models configuration
+        deepseek_models = {
+            "chat": "deepseek-chat",
+            "coder": "deepseek-coder",
+        }
+        
+        if model not in deepseek_models:
+            raise ValueError(f"Unsupported DeepSeek model: {model}. Available options: {list(deepseek_models.keys())}")
+        
+        api_key = os.getenv("DEEPSEEK_API_KEY")
+        if not api_key:
+            raise ValueError("DEEPSEEK_API_KEY not found in environment variables")
+        
+        return ChatDeepSeek(
+            base_url='https://api.deepseek.com/v1', 
+            model=deepseek_models[model], 
+            api_key=SecretStr(api_key)
+        )
+    
+    else:
+        raise ValueError(f"Unsupported provider: {provider}. Available options: ['google', 'deepseek']")
+
+# Initialize the selected LLM
+llm = get_llm(PROVIDER, MODEL)
+
+
 
 import asyncio
 

@@ -12,9 +12,9 @@ browser-useをインストールして、実行できるようになって下さ
 
    ```bash
    # example command for reference
-   pnpm i
+   pip install browser-use langchain-google-genai python-dotenv langchain langchain-openai
 
-   pip install browser-use langchain-google-genai python-dotenv
+   pnpm i
    ```
 
 2. **Set up your Google API key in `.env`:**
