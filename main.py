@@ -40,6 +40,7 @@ def get_llm(provider: str, model: str):
         return ChatGoogleGenerativeAI(model=google_models[model])
     
     elif provider == "deepseek":
+        # https://api-docs.deepseek.com/quick_start/pricing/
         # DeepSeek models configuration
         deepseek_models = {
             "chat": "deepseek-chat",
