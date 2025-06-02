@@ -12,7 +12,7 @@ browser-useをインストールして、実行できるようになって下さ
 
    ```bash
    # example command for reference
-   pip install browser-use langchain-google-genai python-dotenv langchain langchain-openai
+   pip install browser-use langchain-google-genai python-dotenv langchain-openai langchain-core==0.3.49 langchain-community==0.3.17 langchain==0.3.21
 
    pnpm i
    ```
